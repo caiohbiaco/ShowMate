@@ -4,7 +4,7 @@
 **SEU DIÁRIO PESSOAL DE ENTRETENIMENTO**
 
 **Aluno:** Caio Henrique Biaco  
-**Disciplina:** Frameworks para Desenvolvimento de Dispositivos Móveis
+**Disciplina:** Frameworks para Desenvolvimento para Dispositivos Móveis
 
 ## Descrição
 
