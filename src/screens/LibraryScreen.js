@@ -1,85 +1,189 @@
-import { useState } from 'react';
+
+import { useState, useCallback } from 'react';
+
 import {
   FlatList,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
+
+import { useFocusEffect } from '@react-navigation/native';
+
 import MovieCard from '../components/MovieCard';
 
-export default function LibraryScreen() {
-  const [titulo, setTitulo] = useState('');
-  const [ano, setAno] = useState('');
-  const [erro, setErro] = useState('');
+import {
+  loadLibrary,
+  saveLibrary,
+} from '../storage/storage';
+
+const FILTERS = ['Todos', 'Filmes', 'Séries'];
+
+export default function LibraryScreen({ navigation }) {
   const [lista, setLista] = useState([]);
+  const [filtro, setFiltro] = useState('Todos');
+  const [carregando, setCarregando] = useState(true);
 
-  function adicionar() {
-    if (titulo.trim().length < 2) {
-      setErro('Digite um título com pelo menos 2 letras.');
-      return;
-    }
+  useFocusEffect(
+    useCallback(() => {
+      async function carregarLista() {
+        const dadosSalvos = await loadLibrary();
 
-    if (ano.length !== 4 || isNaN(ano)) {
-      setErro('Digite um ano válido, com 4 números.');
-      return;
-    }
+        setLista(dadosSalvos);
+        setCarregando(false);
+      }
 
-    const novoItem = {
-      id: Date.now().toString(),
-      title: titulo.trim(),
-      type: 'filme',
-      year: ano,
-      genre: 'Adicionado por você',
-    };
+      carregarLista();
+    }, [])
+  );
 
-    setLista([...lista, novoItem]);
-    setTitulo('');
-    setAno('');
-    setErro('');
+  async function remover(item) {
+    const atualizada = lista.filter(
+      (conteudo) =>
+        !(
+          conteudo.id === item.id &&
+          conteudo.mediaType === item.mediaType
+        )
+    );
+
+    setLista(atualizada);
+    await saveLibrary(atualizada);
   }
+
+  function abrirDetalhes(item) {
+    if (!item.mediaType) {
+      return;
+    }
+
+    navigation.navigate('ContentDetails', {
+      item: {
+        id: item.id,
+        title: item.title,
+        name: item.title,
+      },
+      type: item.mediaType,
+    });
+  }
+
+  const listaFiltrada = lista.filter((item) => {
+    if (filtro === 'Filmes') {
+      return item.mediaType === 'movie' || item.type === 'filme';
+    }
+
+    if (filtro === 'Séries') {
+      return item.mediaType === 'tv';
+    }
+
+    return true;
+  });
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Minha Biblioteca</Text>
+      <Text style={styles.title}>Minha Lista</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Título"
-        placeholderTextColor="#94A3B8"
-        value={titulo}
-        onChangeText={setTitulo}
-      />
+      <Text style={styles.subtitle}>
+        Seus próximos filmes e séries.
+      </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Ano (ex: 2014)"
-        placeholderTextColor="#94A3B8"
-        keyboardType="numeric"
-        maxLength={4}
-        value={ano}
-        onChangeText={setAno}
-      />
+      <View style={styles.filters}>
+        {FILTERS.map((opcao) => (
+          <Pressable
+            key={opcao}
+            style={[
+              styles.filterButton,
+              filtro === opcao && styles.filterButtonActive,
+            ]}
+            onPress={() => setFiltro(opcao)}
+          >
+            <Text
+              style={[
+                styles.filterText,
+                filtro === opcao && styles.filterTextActive,
+              ]}
+            >
+              {opcao}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
-      {erro !== '' && <Text style={styles.erro}>{erro}</Text>}
+      <Text style={styles.counter}>
+        {listaFiltrada.length}{' '}
+        {listaFiltrada.length === 1 ? 'conteúdo salvo' : 'conteúdos salvos'}
+      </Text>
 
-      <Pressable style={styles.button} onPress={adicionar}>
-        <Text style={styles.buttonText}>Adicionar</Text>
-      </Pressable>
+      {carregando ? (
+        <Text style={styles.emptyText}>Carregando sua lista...</Text>
+      ) : (
+        <FlatList
+          data={listaFiltrada}
+          keyExtractor={(item) =>
+            `${item.mediaType || 'manual'}-${item.id}`
+          }
+          renderItem={({ item }) => (
+            <View style={styles.itemContainer}>
+              <Pressable
+                disabled={!item.mediaType}
+                onPress={() => abrirDetalhes(item)}
+              >
+                <MovieCard
+                  title={item.title}
+                  type={item.type}
+                  year={item.year}
+                  genre={item.genre}
+                  poster={item.poster}
+                  rating={item.rating}
+                />
+              </Pressable>
 
-      <FlatList
-        data={lista}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <MovieCard
-            title={item.title}
-            type={item.type}
-            year={item.year}
-            genre={item.genre}
-          />
-        )}
-      />
+              <View style={styles.actions}>
+                {item.mediaType && (
+                  <Pressable
+                    style={styles.detailsButton}
+                    onPress={() => abrirDetalhes(item)}
+                  >
+                    <Text style={styles.actionText}>
+                      Ver detalhes
+                    </Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  style={styles.removeButton}
+                  onPress={() => remover(item)}
+                >
+                  <Text style={styles.actionText}>
+                    Remover
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>
+                Sua lista está vazia
+              </Text>
+
+              <Text style={styles.emptyText}>
+                Explore filmes e séries em Descobrir e adicione
+                os conteúdos que deseja assistir.
+              </Text>
+
+              <Pressable
+                style={styles.discoverButton}
+                onPress={() => navigation.navigate('Descobrir')}
+              >
+                <Text style={styles.discoverButtonText}>
+                  Explorar conteúdos
+                </Text>
+              </Pressable>
+            </View>
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
@@ -98,33 +202,108 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  input: {
-    backgroundColor: '#1E293B',
-    color: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginTop: 12,
-  },
-
-  erro: {
-    color: '#F87171',
+  subtitle: {
+    color: '#94A3B8',
     fontSize: 14,
-    marginTop: 10,
+    marginTop: 6,
   },
 
-  button: {
-    backgroundColor: '#38BDF8',
-    borderRadius: 12,
-    paddingVertical: 12,
+  filters: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 22,
+  },
+
+  filterButton: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    paddingVertical: 11,
+    borderRadius: 10,
     alignItems: 'center',
+  },
+
+  filterButtonActive: {
+    backgroundColor: '#38BDF8',
+  },
+
+  filterText: {
+    color: '#94A3B8',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+
+  filterTextActive: {
+    color: '#101820',
+  },
+
+  counter: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginTop: 18,
+    marginBottom: 12,
+  },
+
+  itemContainer: {
+    marginBottom: 20,
+  },
+
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+
+  detailsButton: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+
+  removeButton: {
+    flex: 1,
+    backgroundColor: '#7F1D1D',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+
+  actionText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 65,
+    paddingHorizontal: 15,
+  },
+
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: 19,
+    fontWeight: 'bold',
+  },
+
+  emptyText: {
+    color: '#94A3B8',
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
     marginTop: 12,
   },
 
-  buttonText: {
+  discoverButton: {
+    backgroundColor: '#38BDF8',
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 22,
+  },
+
+  discoverButtonText: {
     color: '#101820',
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });

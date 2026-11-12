@@ -1,6 +1,6 @@
 # ShowMate
 
-**YOUR ENTERTAINMENT COMPANION**
+**SEU DIÁRIO PESSOAL DE ENTRETENIMENTO.**
 
 Aluno: Caio Henrique Biaco
 
@@ -58,3 +58,24 @@ npx expo start
 ## Capturas de tela
 
 (Serão adicionadas no próximo passo.)
+
+## Capturas de tela
+
+### Home
+![Tela inicial do ShowMate](assets/screenshots/home.png)
+
+### Descobrir
+![Tela de descoberta de filmes e séries](assets/screenshots/descobrir.png)
+
+### Minha Lista
+![Biblioteca pessoal do usuário](assets/screenshots/biblioteca.png)
+
+### Perfil
+![Perfil e estatísticas do usuário](assets/screenshots/perfil.png)
+
+
+## Créditos e atribuições
+
+O ShowMate utiliza a API do [The Movie Database (TMDB)](https://www.themoviedb.org/) para consultar informações sobre filmes e séries, incluindo títulos, sinopses, pôsteres, avaliações e elenco.
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.
