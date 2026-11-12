@@ -62,16 +62,16 @@ npx expo start
 ## Capturas de tela
 
 ### Home
-![Tela inicial do ShowMate](assets/screenshots/home.png)
+![Tela inicial do ShowMate](assets/screenshots/home.jpeg)
 
 ### Descobrir
-![Tela de descoberta de filmes e séries](assets/screenshots/descobrir.png)
+![Tela de descoberta de filmes e séries](assets/screenshots/descobrir.jpeg)
 
 ### Minha Lista
-![Biblioteca pessoal do usuário](assets/screenshots/biblioteca.png)
+![Biblioteca pessoal do usuário](assets/screenshots/biblioteca.jpeg)
 
 ### Perfil
-![Perfil e estatísticas do usuário](assets/screenshots/perfil.png)
+![Perfil e estatísticas do usuário](assets/screenshots/perfil.jpeg)
 
 
 ## Créditos e atribuições
